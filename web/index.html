@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="it">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Silmaril 2.0 — Client</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Manrope:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+            rel="stylesheet"
+        >
+        <link rel="stylesheet" href="css/silmaclient.css?v=__ASSET_V__">
+    </head>
+    <body>
+        <div class="app" id="app">
+            <div id="admin-notice" class="admin-notice" role="alert" hidden>
+                <div class="admin-notice__inner">
+                    <span class="admin-notice__label">Avviso</span>
+                    <p class="admin-notice__text" id="admin-notice-text"></p>
+                    <button type="button" class="admin-notice__close" id="admin-notice-close" aria-label="Chiudi avviso">×</button>
+                </div>
+            </div>
+            <header class="topbar">
+                <div class="brand">
+                    <span class="jewel" aria-hidden="true"></span>
+                    Silmaril 2.0
+                </div>
+                <div class="room-chip" id="room-chip">In attesa del luogo…</div>
+                <div class="top-actions">
+                    <span id="recording-status" class="recording-status" aria-live="polite"></span>
+                    <button
+                        id="recording-toggle"
+                        class="pill"
+                        type="button"
+                        aria-pressed="false"
+                        disabled
+                        title="Registra sessione (Ctrl+Shift+R)"
+                    >Registra</button>
+                    <button
+                        id="reconnect"
+                        class="pill"
+                        type="button"
+                        hidden
+                        title="Riconnetti (Ctrl+R)"
+                    >Riconnetti</button>
+                    <button
+                        id="changelog-btn"
+                        class="pill"
+                        type="button"
+                        title="Novità e correzioni"
+                        aria-expanded="false"
+                    >Novità</button>
+                    <button
+                        id="report-bug-btn"
+                        class="pill"
+                        type="button"
+                        title="Segnala un bug"
+                    >Bug</button>
+                    <button
+                        id="report-idea-btn"
+                        class="pill"
+                        type="button"
+                        title="Proponi una miglioria"
+                    >Miglioria</button>
+                    <button
+                        id="shortcuts-btn"
+                        class="pill"
+                        type="button"
+                        title="Scorciatoie (?)"
+                    >?</button>
+                    <button
+                        id="settings-btn"
+                        class="pill"
+                        type="button"
+                        aria-expanded="false"
+                        title="Impostazioni"
+                    >⚙</button>
+                    <div id="status" class="status-online" data-connected="false" aria-live="polite">
+                        <i aria-hidden="true"></i>
+                        <span>Disconnesso</span>
+                    </div>
+                    <span
+                        id="latency-chip"
+                        class="latency-chip"
+                        title="Tempo comando → prima risposta MUD (browser↔gateway↔MUD). Confronta locale vs VPS."
+                        aria-live="polite"
+                    >— ms</span>
+                </div>
+            </header>
+
+            <div class="mobile-tabs" id="mobile-tabs" role="tablist">
+                <button type="button" data-tab="luogo">Luogo</button>
+                <button type="button" class="active" data-tab="cronaca">Cronaca</button>
+                <button type="button" data-tab="stato">Pulsanti</button>
+            </div>
+
+            <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+            <div class="changelog-pop" id="changelog-pop" role="dialog" aria-label="Novità" hidden>
+                <h3>Novità e correzioni</h3>
+                <p class="changelog-pop__hint">Note di release del client, aggiornate a ogni deploy.</p>
+                <div class="changelog-pop__list" id="changelog-list"></div>
+                <div class="feedback-pop__actions">
+                    <button type="button" class="pill" id="changelog-close">Chiudi</button>
+                </div>
+            </div>
+
+            <div class="feedback-pop" id="feedback-pop" role="dialog" aria-label="Segnalazione" hidden>
+                <h3 id="feedback-title">Segnalazione</h3>
+                <p class="feedback-pop__hint" id="feedback-hint">Descrivi il problema o l’idea.</p>
+                <label class="visually-hidden" for="feedback-nick">Nick (opzionale)</label>
+                <input
+                    id="feedback-nick"
+                    type="text"
+                    maxlength="40"
+                    placeholder="Nick (opzionale)"
+                    autocomplete="nickname"
+                >
+                <label class="visually-hidden" for="feedback-text">Testo</label>
+                <textarea
+                    id="feedback-text"
+                    rows="5"
+                    maxlength="4000"
+                    placeholder="Scrivi qui la segnalazione…"
+                ></textarea>
+                <div class="feedback-pop__actions">
+                    <button type="button" class="pill" id="feedback-cancel">Annulla</button>
+                    <button type="button" class="pill feedback-pop__send" id="feedback-send">Invia</button>
+                </div>
+            </div>
+
+            <div class="settings-pop" id="settings-pop" role="dialog" aria-label="Impostazioni" hidden>
+                <h3>Impostazioni</h3>
+                <div class="settings-row">
+                    <span>Dimensione testo</span>
+                    <select id="set-font">
+                        <option value="0.92">Compatta</option>
+                        <option value="1" selected>Normale</option>
+                        <option value="1.12">Grande</option>
+                        <option value="1.22">Molto grande</option>
+                    </select>
+                </div>
+                <div class="settings-row">
+                    <label class="chk">
+                        <input type="checkbox" id="set-hide-prompt" checked>
+                        Nascondi prompt &lt;Pf…Mn…&gt;
+                    </label>
+                </div>
+            </div>
+
+            <div class="shortcuts-pop" id="shortcuts-pop" role="dialog" aria-label="Scorciatoie" hidden>
+                <h3>Scorciatoie</h3>
+                <dl class="shortcut-list">
+                    <div><dt>↑ / ↓</dt><dd>Cronologia comandi</dd></div>
+                    <div><dt>Enter</dt><dd>Invia comando</dd></div>
+                    <div><dt>F1–F12</dt><dd>Pulsanti con keybind</dd></div>
+                    <div><dt>Alt+0…9</dt><dd>Pulsanti con keybind</dd></div>
+                    <div><dt>Ctrl+L</dt><dd>Pulisci cronaca (locale)</dd></div>
+                    <div><dt>Ctrl+R</dt><dd>Riconnetti</dd></div>
+                    <div><dt>Ctrl+Shift+R</dt><dd>Avvia / ferma registrazione</dd></div>
+                    <div><dt>Numpad 1–9</dt><dd>Direzioni (sw…ne)</dd></div>
+                    <div><dt>Bussola ↑ ↓</dt><dd>Alto / Basso</dd></div>
+                    <div><dt>Safe</dt><dd>Registra percorso (anche alto/basso) e torna indietro</dd></div>
+                    <div><dt>Esc</dt><dd>Chiudi pannelli</dd></div>
+                    <div><dt>? / Ctrl+/</dt><dd>Questa finestra</dd></div>
+                </dl>
+                <button type="button" class="pill shortcuts-close" id="shortcuts-close">Chiudi</button>
+            </div>
+
+            <div class="stage">
+                <aside class="panel" id="panel-luogo" data-panel="luogo" aria-label="Luogo">
+                    <div class="minimap" id="minimap" aria-label="Minimappa luoghi visitati">
+                        <div class="minimap__head">
+                            <span class="minimap__title">Mappa</span>
+                            <span class="minimap__meta" id="minimap-meta">0 stanze</span>
+                            <div class="minimap__actions">
+                                <button type="button" class="minimap__btn" id="minimap-help" title="Come usare la mappa" aria-expanded="false">?</button>
+                                <button type="button" class="minimap__btn" id="minimap-center" title="Centra su di me">◎</button>
+                                <button type="button" class="minimap__btn" id="minimap-expand" title="Mappa grande">Espandi</button>
+                                <button type="button" class="minimap__btn" id="minimap-clear" title="Pulisci mappa">Pulisci</button>
+                            </div>
+                        </div>
+                        <div class="minimap__stage minimap__stage--hero">
+                            <div class="minimap__glow" aria-hidden="true"></div>
+                            <svg class="minimap__svg" id="minimap-svg" viewBox="0 0 240 168" role="img" aria-label="Mappa delle stanze visitate"></svg>
+                            <p class="minimap__empty" id="minimap-empty">Esplora: la mappa si disegna da sola</p>
+                        </div>
+                        <div class="map-help-pop" id="map-help-pop" role="dialog" aria-label="Come usare la mappa" hidden>
+                            <h3>Mappa (BETA)</h3>
+                            <p>
+                                Pensata per piccole zone: dungeon, quartieri, un pezzo di città —
+                                per ricordare dove sei già stato, non per cartografare tutto Silmaril in una sera.
+                            </p>
+                            <p class="map-help-pop__joke">(Se vuoi provarci lo stesso… in bocca al lupo.)</p>
+                            <ul class="map-help-pop__list">
+                                <li><strong>Muoviti:</strong> le stanze si disegnano da sole (anche con <code>corri e</code> / direzioni).</li>
+                                <li><strong>Espandi:</strong> zoom, pan, cerca per nome.</li>
+                                <li><strong>Salva / Carica</strong> (e Importa/Scarica): tieni più mappe separate per zona.</li>
+                                <li><strong>Dopo Carica/Importa:</strong> stanza giusta → click sul pallino → Sync. Prima del Sync non aggiunge stanze.</li>
+                                <li><strong>Cancella stanze:</strong> click destro sul pallino; sulla mappa grande anche Shift+click → Rimuovi (o tasto Canc). Utile dopo un teletrasporto o se la mappa si sfasa.</li>
+                                <li><strong>Pulisci:</strong> svuota la mappa attuale (i salvataggi restano).</li>
+                            </ul>
+                            <p class="map-help-pop__note">
+                                Funzione in beta: può ancora sbagliare su vie omonime o layout contorti.
+                            </p>
+                            <button type="button" class="pill" id="map-help-close">Chiudi</button>
+                        </div>
+                    </div>
+
+                    <div class="place-box" aria-live="polite">
+                        <span class="place-box__label">Luogo</span>
+                        <strong class="place-box__name" id="scene-caption">In viaggio…</strong>
+                    </div>
+
+                    <div class="map-expand" id="map-expand" hidden>
+                        <div class="map-expand__panel" role="dialog" aria-label="Mappa grande">
+                            <div class="map-expand__head">
+                                <div>
+                                    <h3 id="map-expand-title">Mappa di zona</h3>
+                                    <p class="map-expand__sub" id="map-expand-sub">0 stanze</p>
+                                </div>
+                                <div class="map-expand__tools">
+                                    <label class="map-expand__search">
+                                        <span class="visually-hidden">Cerca stanza</span>
+                                        <input
+                                            id="map-search"
+                                            type="search"
+                                            placeholder="Cerca stanza…"
+                                            autocomplete="off"
+                                        >
+                                    </label>
+                                    <button type="button" class="minimap__btn" id="map-zoom-out" title="Zoom −">−</button>
+                                    <button type="button" class="minimap__btn" id="map-zoom-in" title="Zoom +">+</button>
+                                    <button type="button" class="minimap__btn" id="map-fit" title="Adatta alla vista">Fit</button>
+                                    <button type="button" class="minimap__btn" id="map-goto-me" title="Vai a me">Io</button>
+                                    <button type="button" class="minimap__btn" id="map-remove-room-btn" title="Elimina il pallino selezionato (o click destro sul pallino)">Rimuovi</button>
+                                    <button type="button" class="minimap__btn" id="map-expand-close">Chiudi</button>
+                                </div>
+                            </div>
+                            <div class="map-expand__library">
+                                <input
+                                    id="map-save-name"
+                                    type="text"
+                                    maxlength="48"
+                                    placeholder="Nome zona (es. Midgaard)"
+                                    autocomplete="off"
+                                >
+                                <button type="button" class="minimap__btn" id="map-save-btn" title="Salva nella libreria del browser">Salva</button>
+                                <select id="map-load-select" aria-label="Mappe salvate">
+                                    <option value="">— Mappe salvate —</option>
+                                </select>
+                                <button type="button" class="minimap__btn" id="map-load-btn" title="Carica dalla libreria">Carica</button>
+                                <button type="button" class="minimap__btn" id="map-delete-btn" title="Elimina mappa selezionata">Elimina</button>
+                                <button type="button" class="minimap__btn" id="map-download-btn" title="Scarica file JSON">Scarica</button>
+                                <button type="button" class="minimap__btn" id="map-import-btn" title="Importa file JSON">Importa</button>
+                                <input id="map-import-file" type="file" accept="application/json,.json" hidden>
+                                <button type="button" class="minimap__btn" id="map-sync-btn" title="Allinea posizione al luogo attuale">Sync</button>
+                            </div>
+                            <div class="map-expand__stage" id="map-expand-stage">
+                                <svg class="map-expand__svg" id="minimap-svg-large" viewBox="0 0 960 560" role="img" aria-label="Mappa ingrandita"></svg>
+                                <div class="map-expand__tooltip" id="map-tooltip" hidden></div>
+                                <div class="map-expand__legend">
+                                    <span><i class="lg lg--you"></i> Tu</span>
+                                    <span><i class="lg lg--safe"></i> Safe</span>
+                                    <span><i class="lg lg--near"></i> Vicina</span>
+                                </div>
+                            </div>
+                            <p class="map-expand__hint">
+                                Dopo Carica/Importa: vai nella stanza in gioco → click sul pallino → Sync
+                                (match nome). Fino ad allora non aggiunge stanze.
+                                Pallino sbagliato: click destro per eliminarlo, o Shift+click → Rimuovi.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="compass-wrap" aria-label="Uscite">
+                        <div class="compass" id="compass">
+                            <div class="ring"></div>
+                            <button type="button" class="exit-btn" data-dir="n" title="Nord (8)">N</button>
+                            <button type="button" class="exit-btn" data-dir="e" title="Est (6)">E</button>
+                            <button type="button" class="exit-btn" data-dir="s" title="Sud (2)">S</button>
+                            <button type="button" class="exit-btn" data-dir="w" title="Ovest (4)">O</button>
+                            <button type="button" class="exit-btn" data-dir="u" title="Alto">↑</button>
+                            <button type="button" class="exit-btn" data-dir="d" title="Basso">↓</button>
+                            <div class="compass-core" aria-hidden="true">◎</div>
+                        </div>
+                    </div>
+                    <div class="thumb-compass" id="thumb-compass" aria-label="Direzioni rapide">
+                        <button type="button" data-dir="n">N</button>
+                        <button type="button" data-dir="s">S</button>
+                        <button type="button" data-dir="e">E</button>
+                        <button type="button" data-dir="w">O</button>
+                        <button type="button" data-dir="u">↑</button>
+                        <button type="button" data-dir="d">↓</button>
+                    </div>
+                    <div class="here-meta">
+                        <strong id="here-exits">Uscite: —</strong>
+                        <span id="here-hint">Il luogo si aggiorna quando compaiono le uscite.</span>
+                    </div>
+
+                    <div class="safe-box" id="safe-box">
+                        <div class="safe-box__head">
+                            <span class="safe-box__title">Safe</span>
+                            <span class="safe-box__meta" id="safe-meta">0 passi</span>
+                        </div>
+                        <div class="safe-box__room" id="safe-room">Non impostato</div>
+                        <div class="safe-box__status" id="safe-status">Imposta un punto, poi muoviti: il percorso viene registrato.</div>
+                        <div class="safe-box__actions">
+                            <button type="button" class="safe-btn" id="safe-set">Imposta</button>
+                            <button type="button" class="safe-btn safe-btn--primary" id="safe-return" disabled>Torna</button>
+                            <button type="button" class="safe-btn" id="safe-resume" hidden>Riprendi</button>
+                            <button type="button" class="safe-btn safe-btn--danger" id="safe-stop" hidden>Stop</button>
+                        </div>
+                    </div>
+
+                    <div class="vitals" id="vitals" aria-label="Stato vitale">
+                        <div class="vitals__title">Stato</div>
+                        <div class="meter">
+                            <div class="meter__label">
+                                <span>Vita</span>
+                                <span id="vital-hp-label">—</span>
+                            </div>
+                            <div class="meter__bar meter__bar--hp">
+                                <span id="vital-hp-bar" style="width:0%"></span>
+                            </div>
+                        </div>
+                        <div class="meter">
+                            <div class="meter__label">
+                                <span>Mana</span>
+                                <span id="vital-mn-label">—</span>
+                            </div>
+                            <div class="meter__bar meter__bar--mn">
+                                <span id="vital-mn-bar" style="width:0%"></span>
+                            </div>
+                        </div>
+                        <div class="meter">
+                            <div class="meter__label">
+                                <span>Movimento</span>
+                                <span id="vital-mv-label">—</span>
+                            </div>
+                            <div class="meter__bar meter__bar--mv">
+                                <span id="vital-mv-bar" style="width:0%"></span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="panel log-panel tab-active" id="panel-cronaca" data-panel="cronaca" aria-label="Cronaca">
+                    <div class="panel-head">
+                        Cronaca
+                        <button type="button" class="panel-action" id="clear-terminal" title="Pulisci (Ctrl+L)">Pulisci</button>
+                    </div>
+                    <pre id="terminal" class="terminal" role="log" aria-live="polite"></pre>
+                </section>
+
+                <aside class="panel" id="panel-stato" data-panel="stato">
+                    <div class="panel-head">
+                        Pulsanti
+                        <button type="button" class="panel-action" id="macros-edit-toggle" aria-pressed="false">
+                            Modifica
+                        </button>
+                    </div>
+                    <p class="macros-persist-hint">
+                        I tuoi pulsanti restano salvati in questo browser (anche dopo aver chiuso la pagina).
+                    </p>
+
+                    <div class="macros-toolbar">
+                        <label class="visually-hidden" for="macros-filter">Filtra pulsanti</label>
+                        <input
+                            id="macros-filter"
+                            class="macros-filter"
+                            type="search"
+                            placeholder="Filtra…"
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div id="macros-favorites" class="macros-favorites" hidden>
+                        <div class="macros-favorites__label">Preferiti</div>
+                        <div id="macros-favorites-list" class="macros-favorites__list"></div>
+                    </div>
+
+                    <div id="macros-root" class="macros-root"></div>
+
+                    <div id="macros-editor" class="macros-editor" hidden>
+                        <p class="macros-editor__title">Gestione</p>
+                        <form id="macros-add-category" class="macros-form">
+                            <label for="macros-category-name">Nuova categoria</label>
+                            <div class="macros-form__row">
+                                <input
+                                    id="macros-category-name"
+                                    type="text"
+                                    maxlength="32"
+                                    placeholder="Nome libero, es. Combattimento"
+                                    autocomplete="off"
+                                >
+                                <button type="submit" class="pill">Crea</button>
+                            </div>
+                            <div class="macros-suggestions" id="macros-suggestions" aria-label="Suggerimenti">
+                                <button type="button" class="pill" data-suggest-category="Combattimento">Combattimento</button>
+                                <button type="button" class="pill" data-suggest-category="Incantesimi">Incantesimi</button>
+                                <button type="button" class="pill" data-suggest-category="Utilità">Utilità</button>
+                                <button type="button" class="pill" data-suggest-category="Sociale">Sociale</button>
+                            </div>
+                        </form>
+                        <form id="macros-add-button" class="macros-form">
+                            <label for="macros-button-label">Nuovo pulsante</label>
+                            <select id="macros-button-category" aria-label="Categoria"></select>
+                            <div class="macros-form__row">
+                                <input id="macros-button-label" type="text" maxlength="24" placeholder="Etichetta" autocomplete="off">
+                                <input id="macros-button-command" type="text" maxlength="120" placeholder="Comando MUD" autocomplete="off">
+                            </div>
+                            <select id="macros-button-hotkey" aria-label="Tasto rapido"></select>
+                            <label class="macros-check">
+                                <input id="macros-button-favorite" type="checkbox">
+                                Preferito (barra in alto)
+                            </label>
+                            <button type="submit" class="pill macros-form__submit">Aggiungi pulsante</button>
+                        </form>
+                        <div class="macros-form">
+                            <label>Backup JSON</label>
+                            <div class="macros-form__row">
+                                <button type="button" class="pill" id="macros-export">Esporta</button>
+                                <button type="button" class="pill" id="macros-import">Importa</button>
+                            </div>
+                            <input
+                                id="macros-import-file"
+                                class="visually-hidden"
+                                type="file"
+                                accept="application/json,.json"
+                            >
+                            <p class="macros-editor__hint" style="margin-top:0.45rem">
+                                Esporta salva pulsanti e keybind in un file. Importa li ripristina su questo o un altro PC.
+                            </p>
+                        </div>
+                        <p class="macros-editor__hint">
+                            La gestione resta sotto: i pulsanti usabili stanno sopra. Assegna F1–F12 o Alt+1…9 per i keybind.
+                            Tutto viene salvato automaticamente in questo browser; usa Esporta per backup o per copiarli su un altro PC.
+                        </p>
+                    </div>
+
+                    <details id="session-archive" class="session-archive">
+                        <summary>Sessioni salvate (<span id="session-count">0</span>)</summary>
+                        <p id="session-archive-message" class="session-archive__message" hidden></p>
+                        <ul id="session-list" class="session-list"></ul>
+                    </details>
+                </aside>
+            </div>
+
+            <footer class="composer">
+                <form id="command-form" class="input-row">
+                    <span class="prompt" aria-hidden="true">&gt;</span>
+                    <label class="visually-hidden" for="command">Comando</label>
+                    <input
+                        id="command"
+                        name="command"
+                        type="text"
+                        autocomplete="off"
+                        spellcheck="false"
+                        placeholder="Scrivi un comando…  ·  ? per le scorciatoie"
+                        disabled
+                    >
+                    <button id="send" class="send" type="submit" disabled>Invia</button>
+                </form>
+            </footer>
+        </div>
+
+        <script src="js/silmaclient.js?v=__ASSET_V__"></script>
+    </body>
+</html>

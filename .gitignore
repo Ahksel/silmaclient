@@ -1,0 +1,35 @@
+# Rust build output
+/silmaclient/target/
+
+# Machine-specific gateway configuration (local / VPS secrets)
+/silmaclient/config.development.toml
+/silmaclient/config.production.toml
+
+# Runtime data (tickets, changelog, macros on disk)
+/silmaclient/data/
+
+# Private VPS / deploy notes and automation (keep on PC only)
+/DEPLOY-VPS.md
+/deploy/_push_and_install.py
+/deploy/_redeploy_web.py
+/deploy/_remote_install.sh
+/deploy/__pycache__/
+
+# Deployment-specific files and historical website content
+/silmaril.muninn.land.conf
+/silmaril.muninn.land-le-ssl.conf
+/temporary_site/
+
+# Internal design notes superseded by the public documentation
+/readme.txt
+
+# Local tooling and editor files
+.DS_Store
+.env
+.env.*
+*.log
+*~
+.idea/
+.vscode/
+__pycache__/
+*.pyc

@@ -1,0 +1,27 @@
+[Unit]
+Description=Silma WebSocket to MUD gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=silmaclient
+Group=silmaclient
+WorkingDirectory=/opt/silmaclient
+Environment=SILMACLIENT_DATA=/opt/silmaclient/data
+ExecStart=/opt/silmaclient/silmaclient /etc/silmaclient/config.toml
+Restart=on-failure
+RestartSec=5s
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+ReadWritePaths=/opt/silmaclient/data
+
+[Install]
+WantedBy=multi-user.target

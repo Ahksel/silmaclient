@@ -1,0 +1,26 @@
+[server]
+listen_address = "127.0.0.1"
+listen_port = 8088
+
+[mud]
+# Silmaril — già configurato, non serve cambiarlo per giocare.
+host = "silmaril.servegame.com"
+port = 44444
+
+[connection]
+connect_timeout_seconds = 10
+idle_timeout_seconds = 1800
+max_connections = 100
+max_websocket_message_bytes = 16384
+
+[client]
+command_history_size = 20
+
+[development]
+# true = il programma mostra anche la pagina di gioco nel browser.
+# In produzione dietro Apache lasciare false.
+serve_web = true
+
+[admin]
+# Password per http://.../admin (ticket bug/migliorie).
+password = "Simaril"

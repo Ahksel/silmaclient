@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="it">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Silmaril 2.0 — Admin</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Manrope:wght@400;500;600&display=swap"
+            rel="stylesheet"
+        >
+        <style>
+            :root {
+                --bg: #12160f;
+                --panel: #1a2118;
+                --line: rgba(232, 237, 230, 0.12);
+                --text: #e8ede6;
+                --muted: rgba(232, 237, 230, 0.55);
+                --accent: #c4a35a;
+                --danger: #c45c5c;
+            }
+            * { box-sizing: border-box; }
+            body {
+                margin: 0;
+                min-height: 100vh;
+                font-family: Manrope, system-ui, sans-serif;
+                background:
+                    radial-gradient(1000px 500px at 10% -10%, rgba(196, 163, 90, 0.12), transparent 55%),
+                    var(--bg);
+                color: var(--text);
+            }
+            .wrap {
+                width: min(920px, calc(100% - 2rem));
+                margin: 0 auto;
+                padding: 2rem 0 3rem;
+            }
+            h1 {
+                font-family: Fraunces, Georgia, serif;
+                font-weight: 600;
+                font-size: 1.8rem;
+                margin: 0 0 0.35rem;
+            }
+            .sub { color: var(--muted); margin: 0 0 1.5rem; }
+            .card {
+                background: var(--panel);
+                border: 1px solid var(--line);
+                border-radius: 14px;
+                padding: 1.1rem 1.2rem;
+            }
+            label {
+                display: block;
+                font-size: 0.85rem;
+                color: var(--muted);
+                margin-bottom: 0.35rem;
+            }
+            input, select, button, textarea { font: inherit; }
+            input[type="password"] {
+                width: 100%;
+                max-width: 320px;
+                padding: 0.65rem 0.75rem;
+                border-radius: 10px;
+                border: 1px solid var(--line);
+                background: rgba(0, 0, 0, 0.25);
+                color: var(--text);
+            }
+            .row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.6rem;
+                align-items: end;
+                margin-top: 0.75rem;
+            }
+            button {
+                border: 1px solid var(--line);
+                background: rgba(196, 163, 90, 0.16);
+                color: var(--text);
+                border-radius: 999px;
+                padding: 0.55rem 0.95rem;
+                cursor: pointer;
+            }
+            button:hover { border-color: var(--accent); }
+            button:disabled {
+                opacity: 0.45;
+                cursor: not-allowed;
+            }
+            button.ghost { background: transparent; }
+            button.danger {
+                background: rgba(196, 92, 92, 0.18);
+                border-color: rgba(196, 92, 92, 0.45);
+                color: #f0b4b4;
+            }
+            button.danger:hover { border-color: var(--danger); }
+            .toolbar {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.6rem;
+                justify-content: space-between;
+                align-items: center;
+                margin: 1.25rem 0 0.85rem;
+            }
+            .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+            select {
+                padding: 0.45rem 0.6rem;
+                border-radius: 10px;
+                border: 1px solid var(--line);
+                background: rgba(0, 0, 0, 0.25);
+                color: var(--text);
+            }
+            .msg {
+                min-height: 1.25rem;
+                color: var(--accent);
+                font-size: 0.9rem;
+                margin: 0.4rem 0 0.8rem;
+            }
+            .msg.error { color: #e08a8a; }
+            .list { display: grid; gap: 0.75rem; }
+            .ticket {
+                border: 1px solid var(--line);
+                border-radius: 12px;
+                padding: 0.9rem 1rem;
+                background: rgba(0, 0, 0, 0.18);
+            }
+            .ticket__top {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.45rem 0.75rem;
+                align-items: center;
+                margin-bottom: 0.45rem;
+            }
+            .badge {
+                font-size: 0.72rem;
+                letter-spacing: 0.04em;
+                text-transform: uppercase;
+                padding: 0.2rem 0.5rem;
+                border-radius: 999px;
+                border: 1px solid var(--line);
+            }
+            .badge.bug { color: #f0b4b4; border-color: rgba(196, 92, 92, 0.5); }
+            .badge.miglioria { color: #b8d9ba; border-color: rgba(106, 158, 109, 0.5); }
+            .meta { color: var(--muted); font-size: 0.8rem; }
+            .ticket__text {
+                white-space: pre-wrap;
+                line-height: 1.45;
+                margin: 0.35rem 0 0.85rem;
+                color: var(--text);
+            }
+            .ticket__manage {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                align-items: center;
+                padding-top: 0.55rem;
+                border-top: 1px solid var(--line);
+            }
+            .ticket__manage label {
+                margin: 0;
+                font-size: 0.78rem;
+            }
+            .ticket__manage select {
+                min-width: 9rem;
+            }
+            .hidden { display: none !important; }
+            a.back {
+                color: var(--muted);
+                text-decoration: none;
+                font-size: 0.9rem;
+            }
+            a.back:hover { color: var(--accent); }
+            .empty {
+                color: var(--muted);
+                padding: 1rem;
+                border: 1px dashed var(--line);
+                border-radius: 12px;
+            }
+            .section-title {
+                font-family: Fraunces, Georgia, serif;
+                font-size: 1.25rem;
+                margin: 1.75rem 0 0.65rem;
+            }
+            .presence-card {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.75rem 1rem;
+            }
+            .presence-card__stat {
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+            }
+            .presence-card__label {
+                font-size: 0.78rem;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: var(--muted);
+            }
+            .presence-card__value {
+                font-family: Fraunces, Georgia, serif;
+                font-size: 1.85rem;
+                font-weight: 600;
+                color: var(--accent);
+                line-height: 1.1;
+            }
+            .presence-card__meta {
+                font-size: 0.82rem;
+                color: var(--muted);
+            }
+            .hint {
+                color: var(--muted);
+                font-size: 0.85rem;
+                margin: 0 0 0.75rem;
+                line-height: 1.4;
+            }
+            textarea {
+                width: 100%;
+                min-height: 8rem;
+                padding: 0.65rem 0.75rem;
+                border-radius: 10px;
+                border: 1px solid var(--line);
+                background: rgba(0, 0, 0, 0.25);
+                color: var(--text);
+                resize: vertical;
+            }
+            input[type="text"] {
+                width: 100%;
+                max-width: 220px;
+                padding: 0.55rem 0.7rem;
+                border-radius: 10px;
+                border: 1px solid var(--line);
+                background: rgba(0, 0, 0, 0.25);
+                color: var(--text);
+            }
+            .release-item {
+                margin: 0.2rem 0;
+                font-size: 0.92rem;
+            }
+            .release-item .tag {
+                display: inline-block;
+                min-width: 4.5rem;
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                color: var(--accent);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrap">
+            <a class="back" href="/">← Torna al client</a>
+            <h1>Admin Silmaril 2.0</h1>
+            <p class="sub">Ticket utenti e release (changelog) per ogni deploy.</p>
+
+            <section class="card" id="login-card">
+                <label for="admin-pass">Password amministratore</label>
+                <input id="admin-pass" type="password" autocomplete="current-password">
+                <div class="row">
+                    <button type="button" id="login-btn">Entra</button>
+                </div>
+                <div class="msg" id="login-msg"></div>
+            </section>
+
+            <section id="panel" class="hidden">
+                <div class="toolbar">
+                    <div class="filters">
+                        <select id="filter-kind" aria-label="Tipo">
+                            <option value="">Tutti i tipi</option>
+                            <option value="bug">Bug</option>
+                            <option value="miglioria">Miglioria</option>
+                        </select>
+                        <select id="filter-status" aria-label="Stato">
+                            <option value="">Tutti gli stati</option>
+                            <option value="nuova">Nuova</option>
+                            <option value="in_corso">In corso</option>
+                            <option value="fatta">Fatta</option>
+                            <option value="scartata">Scartata</option>
+                        </select>
+                        <button type="button" class="ghost" id="refresh-btn">Aggiorna</button>
+                    </div>
+                    <button type="button" class="ghost" id="logout-btn">Esci</button>
+                </div>
+
+                <h2 class="section-title">Client connessi</h2>
+                <p class="hint">
+                    Sessioni browser collegate al gateway in questo momento (senza inviare avvisi).
+                </p>
+                <section class="card presence-card">
+                    <div class="presence-card__stat">
+                        <span class="presence-card__label">Online ora</span>
+                        <strong class="presence-card__value" id="presence-count">—</strong>
+                        <span class="presence-card__meta" id="presence-meta">Aggiornamento…</span>
+                    </div>
+                    <button type="button" class="ghost" id="presence-refresh">Aggiorna</button>
+                </section>
+
+                <h2 class="section-title">Avviso live</h2>
+                <p class="hint">
+                    Invia un messaggio a tutti i client connessi (banner in alto).
+                    Usalo prima di un deploy.
+                </p>
+                <section class="card">
+                    <label for="notice-text">Messaggio</label>
+                    <textarea
+                        id="notice-text"
+                        maxlength="280"
+                        placeholder="Il client verrà aggiornato a breve. Salva e preparati a riconnetterti."
+                    ></textarea>
+                    <div class="row">
+                        <button type="button" class="ghost" id="notice-preset">Testo aggiornamento</button>
+                        <button type="button" id="notice-send">Invia avviso</button>
+                    </div>
+                    <div class="msg" id="notice-msg"></div>
+                </section>
+
+                <h2 class="section-title">Ticket</h2>
+                <div class="msg" id="panel-msg"></div>
+                <div class="list" id="ticket-list"></div>
+
+                <h2 class="section-title">Release / changelog</h2>
+                <p class="hint">
+                    Pubblica una release dopo ogni deploy. Una riga = una voce.
+                    Prefissi opzionali: <code>[fix]</code> <code>[new]</code> <code>[note]</code>
+                    (default: correzione).
+                </p>
+                <section class="card">
+                    <label for="release-version">Versione</label>
+                    <input id="release-version" type="text" maxlength="32" placeholder="es. 1.4.0" autocomplete="off">
+                    <label for="release-notes" style="margin-top:0.75rem">Voci (una per riga)</label>
+                    <textarea
+                        id="release-notes"
+                        placeholder="[fix] Navigazione alto/basso&#10;[fix] Safe con coordinate verticali&#10;[new] Changelog in admin"
+                    ></textarea>
+                    <div class="row">
+                        <button type="button" id="release-publish">Pubblica release</button>
+                    </div>
+                    <div class="msg" id="release-msg"></div>
+                </section>
+                <div class="list" id="release-list" style="margin-top:0.85rem"></div>
+            </section>
+        </div>
+        <script>
+            (() => {
+                const PASS_KEY = "silmaclient.admin-pass";
+                const STATUS_OPTIONS = [
+                    ["nuova", "Nuova"],
+                    ["in_corso", "In corso"],
+                    ["fatta", "Fatta"],
+                    ["scartata", "Scartata"],
+                ];
+                const loginCard = document.querySelector("#login-card");
+                const panel = document.querySelector("#panel");
+                const passInput = document.querySelector("#admin-pass");
+                const loginMsg = document.querySelector("#login-msg");
+                const panelMsg = document.querySelector("#panel-msg");
+                const listEl = document.querySelector("#ticket-list");
+                const releaseListEl = document.querySelector("#release-list");
+                const releaseVersion = document.querySelector("#release-version");
+                const releaseNotes = document.querySelector("#release-notes");
+                const releaseMsg = document.querySelector("#release-msg");
+                const noticeText = document.querySelector("#notice-text");
+                const noticeMsg = document.querySelector("#notice-msg");
+                const presenceCount = document.querySelector("#presence-count");
+                const presenceMeta = document.querySelector("#presence-meta");
+                const presenceRefreshBtn = document.querySelector("#presence-refresh");
+                const filterKind = document.querySelector("#filter-kind");
+                const filterStatus = document.querySelector("#filter-status");
+                const DEFAULT_UPDATE =
+                    "Il client verrà aggiornato a breve. Salva e preparati a riconnetterti.";
+                const PRESENCE_POLL_MS = 8000;
+                let tickets = [];
+                let releases = [];
+                let busy = false;
+                let presenceTimer = null;
+
+                function authHeaders() {
+                    const pass = sessionStorage.getItem(PASS_KEY) || "";
+                    return {
+                        Authorization: `Bearer ${pass}`,
+                        "Content-Type": "application/json",
+                    };
+                }
+
+                function showLogin(message, isError) {
+                    stopPresencePoll();
+                    loginCard.classList.remove("hidden");
+                    panel.classList.add("hidden");
+                    loginMsg.textContent = message || "";
+                    loginMsg.classList.toggle("error", Boolean(isError));
+                }
+
+                function showPanel() {
+                    loginCard.classList.add("hidden");
+                    panel.classList.remove("hidden");
+                }
+
+                function kindLabel(kind) {
+                    return kind === "bug" ? "Bug" : "Miglioria";
+                }
+
+                function statusLabel(status) {
+                    const found = STATUS_OPTIONS.find(([value]) => value === status);
+                    return found ? found[1] : status;
+                }
+
+                function formatWhen(value) {
+                    const secs = Number(value);
+                    if (!Number.isFinite(secs) || secs <= 0) {
+                        return value || "—";
+                    }
+                    return new Date(secs * 1000).toLocaleString();
+                }
+
+                function setMsg(text, isError) {
+                    panelMsg.textContent = text || "";
+                    panelMsg.classList.toggle("error", Boolean(isError));
+                }
+
+                function setReleaseMsg(text, isError) {
+                    releaseMsg.textContent = text || "";
+                    releaseMsg.classList.toggle("error", Boolean(isError));
+                }
+
+                function setNoticeMsg(text, isError) {
+                    noticeMsg.textContent = text || "";
+                    noticeMsg.classList.toggle("error", Boolean(isError));
+                }
+
+                function stopPresencePoll() {
+                    if (presenceTimer) {
+                        clearInterval(presenceTimer);
+                        presenceTimer = null;
+                    }
+                }
+
+                function startPresencePoll() {
+                    stopPresencePoll();
+                    void loadPresence();
+                    presenceTimer = setInterval(() => {
+                        void loadPresence();
+                    }, PRESENCE_POLL_MS);
+                }
+
+                async function loadPresence() {
+                    if (!sessionStorage.getItem(PASS_KEY) || panel.classList.contains("hidden")) {
+                        return;
+                    }
+                    try {
+                        const response = await fetch("/silmaclient/admin/presence", {
+                            headers: authHeaders(),
+                            cache: "no-store",
+                        });
+                        if (response.status === 401) {
+                            stopPresencePoll();
+                            sessionStorage.removeItem(PASS_KEY);
+                            showLogin("Password non valida.", true);
+                            return;
+                        }
+                        if (!response.ok) {
+                            presenceCount.textContent = "—";
+                            presenceMeta.textContent = await readError(response);
+                            return;
+                        }
+                        const data = await response.json();
+                        const n = Number(data.connected) || 0;
+                        const max = Number(data.max_connections) || 0;
+                        presenceCount.textContent = String(n);
+                        presenceMeta.textContent = max > 0
+                            ? `${n} conness${n === 1 ? "o" : "i"} · limite ${max} · ${new Date().toLocaleTimeString("it-IT")}`
+                            : `Aggiornato ${new Date().toLocaleTimeString("it-IT")}`;
+                    } catch {
+                        presenceMeta.textContent = "Aggiornamento non riuscito";
+                    }
+                }
+
+                async function sendNotice() {
+                    if (busy) return;
+                    busy = true;
+                    setNoticeMsg("Invio…", false);
+                    try {
+                        const response = await fetch("/silmaclient/admin/broadcast", {
+                            method: "POST",
+                            headers: authHeaders(),
+                            body: JSON.stringify({
+                                text: noticeText.value.trim() || null,
+                            }),
+                        });
+                        if (response.status === 401) {
+                            sessionStorage.removeItem(PASS_KEY);
+                            showLogin("Password non valida.", true);
+                            return;
+                        }
+                        if (!response.ok) {
+                            setNoticeMsg(await readError(response), true);
+                            return;
+                        }
+                        const data = await response.json();
+                        const n = Number(data.recipients) || 0;
+                        setNoticeMsg(
+                            n === 0
+                                ? "Avviso inviato, ma nessun client connesso al gateway."
+                                : `Avviso inviato a ${n} client conness${n === 1 ? "o" : "i"}.`,
+                            false,
+                        );
+                        void loadPresence();
+                    } catch {
+                        setNoticeMsg("Invio non riuscito (rete).", true);
+                    } finally {
+                        busy = false;
+                    }
+                }
+
+                function parseReleaseLines(raw) {
+                    const items = [];
+                    for (const line of String(raw || "").split(/\r?\n/)) {
+                        const trimmed = line.trim();
+                        if (!trimmed) continue;
+                        let kind = "fix";
+                        let text = trimmed;
+                        const match = trimmed.match(/^\[(fix|new|feature|note)\]\s*(.+)$/i);
+                        if (match) {
+                            const tag = match[1].toLowerCase();
+                            kind = tag === "new" || tag === "feature" ? "feature" : tag;
+                            text = match[2].trim();
+                        }
+                        if (text) {
+                            items.push({ kind, text });
+                        }
+                    }
+                    return items;
+                }
+
+                function kindReleaseLabel(kind) {
+                    if (kind === "feature") return "Nuovo";
+                    if (kind === "note") return "Nota";
+                    return "Fix";
+                }
+
+                function renderReleases() {
+                    if (!releases.length) {
+                        releaseListEl.replaceChildren();
+                        const empty = document.createElement("div");
+                        empty.className = "empty";
+                        empty.textContent = "Nessuna release pubblicata.";
+                        releaseListEl.append(empty);
+                        return;
+                    }
+                    releaseListEl.replaceChildren(
+                        ...releases.map((release) => {
+                            const article = document.createElement("article");
+                            article.className = "ticket";
+
+                            const top = document.createElement("div");
+                            top.className = "ticket__top";
+
+                            const ver = document.createElement("span");
+                            ver.className = "badge";
+                            ver.textContent = `v${release.version}`;
+
+                            const meta = document.createElement("span");
+                            meta.className = "meta";
+                            meta.textContent = formatWhen(release.created_at);
+
+                            top.append(ver, meta);
+
+                            const body = document.createElement("div");
+                            body.className = "ticket__text";
+                            for (const item of release.items || []) {
+                                const row = document.createElement("div");
+                                row.className = "release-item";
+                                const tag = document.createElement("span");
+                                tag.className = "tag";
+                                tag.textContent = kindReleaseLabel(item.kind);
+                                row.append(tag, document.createTextNode(` ${item.text}`));
+                                body.append(row);
+                            }
+
+                            const manage = document.createElement("div");
+                            manage.className = "ticket__manage";
+                            const deleteBtn = document.createElement("button");
+                            deleteBtn.type = "button";
+                            deleteBtn.className = "danger";
+                            deleteBtn.textContent = "Elimina release";
+                            deleteBtn.addEventListener("click", () => {
+                                void deleteRelease(release.id);
+                            });
+                            manage.append(deleteBtn);
+
+                            article.append(top, body, manage);
+                            return article;
+                        }),
+                    );
+                }
+
+                async function readError(response) {
+                    try {
+                        const text = (await response.text()).trim();
+                        return text || `Errore ${response.status}`;
+                    } catch {
+                        return `Errore ${response.status}`;
+                    }
+                }
+
+                function render() {
+                    const kind = filterKind.value;
+                    const status = filterStatus.value;
+                    const filtered = tickets.filter((ticket) => {
+                        if (kind && ticket.kind !== kind) return false;
+                        if (status && ticket.status !== status) return false;
+                        return true;
+                    });
+
+                    if (filtered.length === 0) {
+                        listEl.replaceChildren();
+                        const empty = document.createElement("div");
+                        empty.className = "empty";
+                        empty.textContent = tickets.length === 0
+                            ? "Nessun ticket presente."
+                            : "Nessun ticket con questi filtri.";
+                        listEl.append(empty);
+                        return;
+                    }
+
+                    listEl.replaceChildren(
+                        ...filtered.map((ticket) => {
+                            const article = document.createElement("article");
+                            article.className = "ticket";
+                            article.dataset.id = ticket.id;
+
+                            const top = document.createElement("div");
+                            top.className = "ticket__top";
+
+                            const kindBadge = document.createElement("span");
+                            kindBadge.className = `badge ${ticket.kind}`;
+                            kindBadge.textContent = kindLabel(ticket.kind);
+
+                            const statusBadge = document.createElement("span");
+                            statusBadge.className = "badge";
+                            statusBadge.textContent = statusLabel(ticket.status);
+
+                            const meta = document.createElement("span");
+                            meta.className = "meta";
+                            meta.textContent = `${formatWhen(ticket.created_at)}${
+                                ticket.nick ? ` · ${ticket.nick}` : ""
+                            }`;
+
+                            top.append(kindBadge, statusBadge, meta);
+
+                            const text = document.createElement("p");
+                            text.className = "ticket__text";
+                            text.textContent = ticket.text || "(senza testo)";
+
+                            const manage = document.createElement("div");
+                            manage.className = "ticket__manage";
+
+                            const statusLabelEl = document.createElement("label");
+                            statusLabelEl.textContent = "Stato";
+                            statusLabelEl.htmlFor = `status-${ticket.id}`;
+
+                            const select = document.createElement("select");
+                            select.id = `status-${ticket.id}`;
+                            select.setAttribute("aria-label", "Cambia stato");
+                            for (const [value, label] of STATUS_OPTIONS) {
+                                const option = document.createElement("option");
+                                option.value = value;
+                                option.textContent = label;
+                                if (value === ticket.status) {
+                                    option.selected = true;
+                                }
+                                select.append(option);
+                            }
+
+                            const saveBtn = document.createElement("button");
+                            saveBtn.type = "button";
+                            saveBtn.textContent = "Salva stato";
+                            saveBtn.addEventListener("click", () => {
+                                void updateStatus(ticket.id, select.value);
+                            });
+
+                            const deleteBtn = document.createElement("button");
+                            deleteBtn.type = "button";
+                            deleteBtn.className = "danger";
+                            deleteBtn.textContent = "Elimina";
+                            deleteBtn.addEventListener("click", () => {
+                                void deleteTicket(ticket.id);
+                            });
+
+                            manage.append(statusLabelEl, select, saveBtn, deleteBtn);
+                            article.append(top, text, manage);
+                            return article;
+                        }),
+                    );
+                }
+
+                async function loadTickets() {
+                    setMsg("Caricamento…", false);
+                    try {
+                        const response = await fetch("/silmaclient/admin/tickets", {
+                            headers: authHeaders(),
+                            cache: "no-store",
+                        });
+                        if (response.status === 401) {
+                            sessionStorage.removeItem(PASS_KEY);
+                            showLogin("Password non valida.", true);
+                            return false;
+                        }
+                        if (!response.ok) {
+                            setMsg(await readError(response), true);
+                            return false;
+                        }
+                        tickets = await response.json();
+                        if (!Array.isArray(tickets)) {
+                            tickets = [];
+                        }
+                        setMsg(`${tickets.length} ticket`, false);
+                        render();
+                        return true;
+                    } catch {
+                        setMsg("Errore di rete nel caricamento.", true);
+                        return false;
+                    }
+                }
+
+                async function updateStatus(id, status) {
+                    if (busy) return;
+                    busy = true;
+                    setMsg("Salvataggio stato…", false);
+                    try {
+                        const response = await fetch(`/silmaclient/admin/tickets/${encodeURIComponent(id)}`, {
+                            method: "POST",
+                            headers: authHeaders(),
+                            body: JSON.stringify({ status }),
+                        });
+                        if (response.status === 401) {
+                            sessionStorage.removeItem(PASS_KEY);
+                            showLogin("Password non valida.", true);
+                            return;
+                        }
+                        if (!response.ok) {
+                            setMsg(await readError(response), true);
+                            return;
+                        }
+                        setMsg("Stato aggiornato.", false);
+                        await loadTickets();
+                    } catch {
+                        setMsg("Aggiornamento non riuscito (rete).", true);
+                    } finally {
+                        busy = false;
+                    }
+                }
+
+                async function deleteTicket(id) {
+                    if (busy) return;
+                    const ok = window.confirm("Eliminare definitivamente questo ticket?");
+                    if (!ok) return;
+                    busy = true;
+                    setMsg("Eliminazione…", false);
+                    try {
+                        const response = await fetch(
+                            `/silmaclient/admin/tickets/${encodeURIComponent(id)}/delete`,
+                            {
+                                method: "POST",
+                                headers: authHeaders(),
+                                body: "{}",
+                            },
+                        );
+                        if (response.status === 401) {
+                            sessionStorage.removeItem(PASS_KEY);
+                            showLogin("Password non valida.", true);
+                            return;
+                        }
+                        if (!response.ok && response.status !== 204) {
+                            setMsg(await readError(response), true);
+                            return;
+                        }
+                        setMsg("Ticket eliminato.", false);
+                        await loadTickets();
+                    } catch {
+                        setMsg("Eliminazione non riuscita (rete).", true);
+                    } finally {
+                        busy = false;
+                    }
+                }
+
+                async function loadReleases() {
+                    setReleaseMsg("Caricamento release…", false);
+                    try {
+                        const response = await fetch("/silmaclient/changelog", {
+                            cache: "no-store",
+                        });
+                        if (!response.ok) {
+                            setReleaseMsg(await readError(response), true);
+                            return;
+                        }
+                        const data = await response.json();
+                        releases = Array.isArray(data.releases) ? data.releases : [];
+                        setReleaseMsg(`${releases.length} release`, false);
+                        renderReleases();
+                    } catch {
+                        setReleaseMsg("Errore di rete nel caricamento release.", true);
+                    }
+                }
+
+                async function publishRelease() {
+                    if (busy) return;
+                    const version = releaseVersion.value.trim();
+                    const items = parseReleaseLines(releaseNotes.value);
+                    if (!version) {
+                        setReleaseMsg("Inserisci la versione (es. 1.4.0).", true);
+                        releaseVersion.focus();
+                        return;
+                    }
+                    if (!items.length) {
+                        setReleaseMsg("Aggiungi almeno una voce.", true);
+                        releaseNotes.focus();
+                        return;
+                    }
+                    busy = true;
+                    setReleaseMsg("Pubblicazione…", false);
+                    try {
+                        const response = await fetch("/silmaclient/admin/changelog", {
+                            method: "POST",
+                            headers: authHeaders(),
+                            body: JSON.stringify({ version, items }),
+                        });
+                        if (response.status === 401) {
+                            sessionStorage.removeItem(PASS_KEY);
+                            showLogin("Password non valida.", true);
+                            return;
+                        }
+                        if (!response.ok) {
+                            setReleaseMsg(await readError(response), true);
+                            return;
+                        }
+                        releaseNotes.value = "";
+                        setReleaseMsg(`Release v${version} pubblicata.`, false);
+                        await loadReleases();
+                    } catch {
+                        setReleaseMsg("Pubblicazione non riuscita (rete).", true);
+                    } finally {
+                        busy = false;
+                    }
+                }
+
+                async function deleteRelease(id) {
+                    if (busy) return;
+                    const ok = window.confirm("Eliminare definitivamente questa release?");
+                    if (!ok) return;
+                    busy = true;
+                    setReleaseMsg("Eliminazione…", false);
+                    try {
+                        const response = await fetch(
+                            `/silmaclient/admin/changelog/${encodeURIComponent(id)}/delete`,
+                            {
+                                method: "POST",
+                                headers: authHeaders(),
+                                body: "{}",
+                            },
+                        );
+                        if (response.status === 401) {
+                            sessionStorage.removeItem(PASS_KEY);
+                            showLogin("Password non valida.", true);
+                            return;
+                        }
+                        if (!response.ok && response.status !== 204) {
+                            setReleaseMsg(await readError(response), true);
+                            return;
+                        }
+                        setReleaseMsg("Release eliminata.", false);
+                        await loadReleases();
+                    } catch {
+                        setReleaseMsg("Eliminazione non riuscita (rete).", true);
+                    } finally {
+                        busy = false;
+                    }
+                }
+
+                async function tryLogin() {
+                    const pass = passInput.value.trim();
+                    if (!pass) {
+                        showLogin("Inserisci la password.", true);
+                        return;
+                    }
+                    sessionStorage.setItem(PASS_KEY, pass);
+                    showPanel();
+                    startPresencePoll();
+                    await Promise.all([loadTickets(), loadReleases()]);
+                }
+
+                document.querySelector("#login-btn").addEventListener("click", () => {
+                    void tryLogin();
+                });
+                passInput.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter") {
+                        void tryLogin();
+                    }
+                });
+                document.querySelector("#refresh-btn").addEventListener("click", () => {
+                    void Promise.all([loadTickets(), loadReleases(), loadPresence()]);
+                });
+                document.querySelector("#logout-btn").addEventListener("click", () => {
+                    stopPresencePoll();
+                    sessionStorage.removeItem(PASS_KEY);
+                    passInput.value = "";
+                    showLogin("");
+                });
+                document.querySelector("#release-publish").addEventListener("click", () => {
+                    void publishRelease();
+                });
+                document.querySelector("#notice-preset").addEventListener("click", () => {
+                    noticeText.value = DEFAULT_NOTICE;
+                    noticeText.focus();
+                });
+                document.querySelector("#notice-send").addEventListener("click", () => {
+                    void sendNotice();
+                });
+                presenceRefreshBtn.addEventListener("click", () => {
+                    void loadPresence();
+                });
+                filterKind.addEventListener("change", render);
+                filterStatus.addEventListener("change", render);
+
+                if (sessionStorage.getItem(PASS_KEY)) {
+                    showPanel();
+                    startPresencePoll();
+                    void Promise.all([loadTickets(), loadReleases()]);
+                }
+            })();
+        </script>
+    </body>
+</html>
